@@ -1,0 +1,63 @@
+Palette of Today!
+<head>
+  <style>
+    #palette img { width: 40px; height: 40px; }
+    .paint { position: absolute; pointer-events: none; width: 50px; }
+  </style>
+</head>
+<body>
+  <nav></nav>
+  <div id="palette"></div>
+  <main id="m" style="width:100vw; height:100vh;"></main>
+
+  <script src="https://cdn.jsdelivr.net/gh/netizenorg/netnet-standard-library/build/nn.min.js"></script>
+  <script>
+    /* global nn */
+    let brush = "";
+
+    function jsonFlickrFeed(d) {
+      nn.get('#palette').innerHTML = '';
+      d.items.forEach(i => {
+        nn.create('img')
+          .set('src', i.media.m)
+          .addTo('#palette')
+          .on('click', () => { brush = i.media.m; });
+      });
+    }
+
+    function load(t) {
+      nn.create('script')
+        .set('src', `https://www.flickr.com/services/feeds/photos_public.gne?format=json&tags=${t}&t=${Date.now()}`)
+        .addTo('head');
+    }
+
+    function save() {
+      const doc = nn.get('main').innerHTML
+      const blob = new Blob([doc], { type: 'text/html' })
+      const url = URL.createObjectURL(blob)
+      const a = nn.create('a')
+        .set('href', url)
+        .set('download', 'web-drawing.html')
+        .addTo('nav')
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+    }
+
+    function draw() {
+      if (!nn.mouseDown || !brush) return
+      nn.create('img')
+        .set('src', brush)
+        .set('class', 'paint')
+        .positionOrigin('center')
+        .position(nn.mouseX, nn.mouseY)
+        .addTo('#m')
+    }
+    nn.create('button').content('Nature').addTo('nav').on('click', () => load('nature'))
+    nn.create('button').content('Society').addTo('nav').on('click', () => load('people'))
+    nn.create('button').content('Clear').addTo('nav').on('click', () => { nn.get('#m').innerHTML = '' })
+    nn.create('button').content('Save').addTo('nav').on('click', save)
+
+    nn.on('mousemove', draw)
+  </script>
+</body>
